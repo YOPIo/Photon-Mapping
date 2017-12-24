@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------------------
 */
 #include "ray.h"
+#include "surface_intersection_info.h"
 #include "bounding_box.h"
 #include "vec3.h"
 /*
@@ -54,6 +55,7 @@ struct Photon
 /*
 // ---------------------------------------------------------------------------
 */
+#define swap(ph,a,b) { Photon* ph2=ph[a]; ph[a]=ph[b]; ph[b]=ph2; }
 class PhotonMap
 {
   /* PhotonMap constructors */
@@ -92,7 +94,12 @@ public:
 
   /* PhotonMap public methods */
 public:
-  auto StorePhotonRayAsPhoton (const PhotonRay& ray) -> bool
+  auto StorePhotonRayAsPhoton
+  (
+   const PhotonRay& ray,
+   const SurfaceIntersectionInfo& info
+  )
+    -> bool
   {
     if (kMaxPhotons < num_stored_photons_)
     {
@@ -100,32 +107,29 @@ public:
       return false;
     }
 
+    // Initialize photon
+    Photon* const p = &photons_[++num_stored_photons_];
+    p->position = info.position;
+    p->power    = ray.flux;
+
     // Update boundingbox
-    bounds_.Append (ray.origin);
+    bounds_.Append (info.position);
 
     // Reference to lookup table indices
-    size_t theta (std::acos (ray.direction[2]) * 256.0 / kPi);
-    unsigned char c_theta (static_cast <unsigned char> (theta));
+    int theta (std::acos (ray.direction[2]) * 256.0 / kPi);
+    p->theta = static_cast <unsigned char> (theta);
     if (theta > 255)
     {
-      c_theta = static_cast <unsigned char> (255);
+      p->theta = 255;
     }
 
-    size_t phi (std::atan2 (ray.direction[1], ray.direction[0]) * 256.0
-                / (2.0 * kPi));
-    unsigned char c_phi (static_cast <unsigned char> (phi));
+    int phi (std::atan2 (ray.direction[1], ray.direction[0])
+                * 256.0 / (2.0 * kPi));
+    p->phi = static_cast <unsigned char> (phi);
     if (phi > 255)
     {
-      c_phi = static_cast <unsigned char> (255);
+      p->phi = 255;
     }
-
-    // Increment number of photons which are already stored
-    // Create Photon from PhotonRay and store it
-    photons_[++num_stored_photons_] = Photon (ray.origin,
-                                              ray.flux,
-                                              c_theta,
-                                              c_phi);
-
     return true;
   }
 
@@ -145,13 +149,18 @@ public:
     for (int i = 0; i <= num_stored_photons_; ++i)
     {
       pa2[i] = &photons_[i];
+      // printf ("%lf, %lf, %lf\n", pa2[i]->position.x, pa2[i]->position.y, pa2[i]->position.z);
+      // printf ("%lf, %lf, %lf\n", photons_[i].position.x, photons_[i].position.y, photons_[i].position.z);
     }
 
+    std::cerr << "Begin balacing." << std::endl;
     BalanceSegment(pa1, pa2, 1, 1, num_stored_photons_);
     free(pa2);
+    std::cerr << "Balanced doen." << std::endl;
 
     int d, j = 1, foo = 1;
     Photon foo_photon (photons_[j]);
+
     for (int i = 1; i <= num_stored_photons_; ++i)
     {
       d = pa1[j] - photons_.get ();
@@ -263,7 +272,7 @@ private:
       }
       else
       {
-        balanced[2 * index - 1] = original[end];
+        balanced[2 * index + 1] = original[end];
       }
     }
   }
@@ -281,7 +290,7 @@ private:
     int left  (begin);
     int right (end);
 
-    while (right > left)
+    while (left < right)
     {
       const float v (photon[right]->position[axis]);
       int i = left - 1;
@@ -297,10 +306,11 @@ private:
         {
           break;
         }
-        std::swap (photon[i], photon[j]);
+        swap (photon, i, j);
       }
 
-      std::swap (photon[i], photon[right]);
+      swap (photon, i, right);
+      // std::swap (photon[i], photon[right]);
       if (i >= median)
       {
         right = i - 1;

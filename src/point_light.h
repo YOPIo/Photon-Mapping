@@ -5,7 +5,6 @@
 */
 #include "vec3.h"
 #include "ray.h"
-#include "photon_map.h"
 #include "random.h"
 /*
 // ---------------------------------------------------------------------------
@@ -49,9 +48,8 @@ public:
   auto GeneratePhotonRay (PhotonRay* ray) const -> void
   {
     // Sample a point on the unit sphere
-    const auto  uv    (Random::Sample2d ());
-    const Float theta (2.0 * kPi * uv.first);
-    const Float phi   (kPi * uv.second);
+    const Float theta (2.0 * kPi * XorShift::Next01 ());
+    const Float phi   (kPi * XorShift::Next01 ());
 
     // Compute direction
     const Vec3 dir (std::sin (phi) * std::cos (theta),

@@ -73,7 +73,7 @@ public:
 */
 auto operator + (const Vec3& v0, const Vec3& v1) -> Vec3
 {
-  return Vec3 (v0.x + v1.x, v0.y + v1.y, v1.z + v1.z);
+  return Vec3 (v0.x + v1.x, v0.y + v1.y, v0.z + v1.z);
 }
 /*
 // ---------------------------------------------------------------------------

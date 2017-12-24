@@ -6,7 +6,6 @@
 #include "core.h"
 #include "ray.h"
 #include "vec3.h"
-#include "material.h"
 /*
 // ---------------------------------------------------------------------------
 */
@@ -45,9 +44,6 @@ struct SurfaceIntersectionInfo
   Vec3   oriented_normal; //
   Vec3   outgoing;        // Ray direction
   Float  t;               // Parameter 't' to compute the intersected position
-
-  std::weak_ptr <Sphere>   sphere;
-  std::weak_ptr <Material> material;
 }; // class SurfaceIntersectionInfo
 /*
 // ---------------------------------------------------------------------------

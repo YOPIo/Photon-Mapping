@@ -17,17 +17,17 @@ namespace
 /*
 // ---------------------------------------------------------------------------
 */
-typedef double Float;
+typedef float Float;
 /*
 // ---------------------------------------------------------------------------
 // Render settings
 // ---------------------------------------------------------------------------
 */
-static const uint32_t kWidth       = 300;
-static const uint32_t kHeight      = 300;
+static const uint32_t kWidth       = 480;
+static const uint32_t kHeight      = 270;
 static const uint32_t kSuperSample = 2;
 static const uint32_t kSample      = 2;
-static const uint32_t kNumPhotons  = 100000;
+static const uint32_t kNumPhotons  = 1000000;
 /*
 // ---------------------------------------------------------------------------
 // Global constant variables

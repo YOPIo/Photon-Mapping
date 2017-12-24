@@ -13,61 +13,75 @@ namespace
 /*
 // ---------------------------------------------------------------------------
 */
-class Random
+class XorShift
 {
-  /* Random constructors */
-public:
-  Random () = default;
+  /* Xorshift public constructors */
+ public:
+  XorShift () = default;
 
 
-  /* Random destructor */
-public:
-  virtual ~Random () = default;
+  /* Xorshift public destructor */
+ public:
+  virtual ~XorShift() = default;
 
 
-  /* Random public operators*/
-public:
-  Random (const Random&  random) = default;
-  Random (      Random&& random) = default;
+  /* Xorshift public operators */
+ public:
+  XorShift (const XorShift&  rnd) = default;
+  XorShift (      XorShift&& rnd) = default;
 
-  auto operator = (const Random&  random) -> Random& = default;
-  auto operator = (      Random&& random) -> Random& = default;
+  auto operator = (const XorShift&  rnd) -> XorShift& = default;
+  auto operator = (      XorShift&& rnd) -> XorShift& = default;
 
-  static auto Sample1d () -> Float
+
+  /* Xorshift public methods */
+ public:
+  // Reset the seed
+  // Give:
+  //   - seed
+  auto SetSeed (std::uint_fast32_t seed) -> void
   {
-    return distribution_ (engine_);
+    x_ = seed << 13;
+    y_ = (seed >> 9) ^ (x_ << 6);
+    z_ = y_ >> 7;
+    w_ = seed;
   }
 
-  static auto Sample2d () -> std::pair <Float, Float>
+  // Generate the random number in [0, 1)
+  // Return:
+  //   - Random number in [0, 1)
+  static auto Next01 () -> float
   {
-    const Float s1 (distribution_ (engine_));
-    const Float s2 (distribution_ (engine_));
-    return std::make_pair (s1, s2);
+    return static_cast<float> (Next ()) / std::numeric_limits<uint_fast32_t>::max ();
   }
 
-  static auto Sample3d () -> std::tuple <Float, Float, Float>
+  // Generate the random number in [0, 2^32)
+  // Return:
+  //   - Random number in [0, 2^32)
+  static auto Next () -> std::uint_fast32_t
   {
-    const Float s1 (distribution_ (engine_));
-    const Float s2 (distribution_ (engine_));
-    const Float s3 (distribution_ (engine_));
-    return std::make_tuple (s1, s2, s3);
+
+    std::uint_fast32_t t = (x_ ^ (x_ << 11));
+    x_ = y_;
+    y_ = z_;
+    z_ = w_;
+    return w_ = (w_ ^ (w_ >> 19)) ^ (t ^ (t >> 8));
   }
 
 
-  /* Random private operators */
-private:
-  static int a;
-  static std::random_device rng_;
-  static std::mt19937_64    engine_;
-  static std::uniform_real_distribution <> distribution_;
-
-}; // class Random
+ private:
+  static std::uint_fast32_t x_;
+  static std::uint_fast32_t y_;
+  static std::uint_fast32_t z_;
+  static std::uint_fast32_t w_;
+};
 /*
 // ---------------------------------------------------------------------------
 */
-std::random_device Random::rng_;
-std::mt19937_64    Random::engine_ (rng_ ());
-std::uniform_real_distribution <> Random::distribution_ (0.0, 1.0);
+std::uint_fast32_t XorShift::x_ = 123456789;
+std::uint_fast32_t XorShift::y_ = 362436069;
+std::uint_fast32_t XorShift::z_ = 521288629;
+std::uint_fast32_t XorShift::w_ = 88675123;
 /*
 // ---------------------------------------------------------------------------
 */
